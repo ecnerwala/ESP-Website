@@ -12,15 +12,31 @@ function Directory(sections, el, schedule_assignments, matrix) {
     this.schedule_assignments = schedule_assignments;
     this.matrix = matrix;
 
-    /**
-     * Render the directory.
-     */
-    this.render = function(){
-        // Remove old classes from the directory
-        var oldChildren = this.el.children();
-        $j.each(oldChildren, function(c){
-            oldChildren[c].hidden = true;
-        });
+        // filter for determining active section or not
+        activeFilter: function(section) {
+	    var lunch_symbol = "";
+	    return section.category != lunch_symbol;
+	},
+        // sort active rows
+        sort: function(prop){
+            var prop = prop || this.active_sort;
+            this.header.children().removeClass('sort-by asc desc');
+            if (prop) {
+                prop.header.addClass('sort-by').addClass(prop.reverse ? 'asc' : 'desc');
+                this.active_sort = prop;
+                this.active_rows.sort(prop.sort.bind(this));
+                if (prop.reverse) this.active_rows.reverse();
+            }
+            this.update();
+        },
+        // add an entry
+        addEntry: function(entry, update){
+            var update = typeof update == 'undefined' ? true : update;
+            if (Object.isArray(entry)) {
+		// we need basic class info
+		if (!entry.class_info) {
+		    // TODO: fill this in
+		}
 
         setTimeout(function(){
             $j.each(oldChildren, function(c){
