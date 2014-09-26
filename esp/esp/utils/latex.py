@@ -145,7 +145,8 @@ def _gen_latex(texcode, stdout, stderr, type='pdf', remove_files=False):
 
     if type == 'pdf':
         mime = 'application/pdf'
-        check_call(['pdflatex'] + latex_options + ['%s.tex' % file_base])
+        latex_options.append('-shell-escape')
+        call(['pdflatex'] + latex_options + ['%s.tex' % file_base])
 
     elif type == 'log':
         mime = 'text/plain'
