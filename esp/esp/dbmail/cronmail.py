@@ -47,25 +47,9 @@ from django.conf import settings
 _ONE_WEEK = timedelta(weeks=1)
 
 
-def process_messages():
-    """Go through all unprocessed messages and process them.
-
-    Callers (e.g. dbmail_cron.py) should ensure that this function is not
-    called in more than one thread simultaneously."""
-
-    now = datetime.now()
-    one_week_ago = now - _ONE_WEEK
-
-    # Choose a set of messages to process.  Anything which arrives later will
-    # not be processed by this run of the script. Any outstanding requests
-    # which were created over one week ago are assumed to be out-of-date, and
-    # are ignored.
-    messages = MessageRequest.objects.filter(Q(processed_by__lte=now) |
-                                             Q(processed_by__isnull=True),
-                                             created_at__gte=one_week_ago,
-                                             processed=False,
-    )
-    messages = list(messages)
+    MessageRequest.objects.filter(Q(processed_by__lte=now) | Q(processed_by__isnull=True)).filter(processed=False).update(processed_by=target_time)
+    #   Identify the messages we just claimed.
+    messages = MessageRequest.objects.filter(processed_by=target_time, processed=False)
 
     #   Process message requests
     for message in messages:
@@ -79,30 +63,14 @@ def process_messages():
 # Deliberately uses transaction autocommitting -- we don't need this to be
 # atomic.
 def send_email_requests():
-    """Go through all email requests that aren't sent and send them.
+    """Go through all email requests that aren't sent and send them."""
+    if hasattr(settings, 'EMAILRETRIES') and settings.EMAILRETRIES is not None:
+        retries = settings.EMAILRETRIES
+    else:
+        retries = 2 # default 3 tries total
 
-    Callers (e.g. dbmail_cron.py) should ensure that this function is not
-    called in more than one thread simultaneously."""
-
-    now = datetime.now()
-    one_week_ago = now - _ONE_WEEK
-
-    retries = getattr(settings, 'EMAILRETRIES', None)
-    if retries is None:
-        # previous code thought that settings.EMAILRETRIES might be set to None
-        # to be the default, rather than being undefined, so we keep that
-        # behavior.
-        retries = 2 # i.e. 3 tries total
-
-    # Choose a set of emails to process.  Anything which arrives later will
-    # not be processed by this run of the script. Any outstanding requests
-    # which were created over one week ago are assumed to be out-of-date, and
-    # are ignored.
-    mailtxts = TextOfEmail.objects.filter(Q(sent_by__lte=now) |
-                                          Q(sent_by__isnull=True),
-                                          created_at__gte=one_week_ago,
-                                          sent__isnull=True,
-                                          tries__lte=retries)
+    #   Find unsent e-mail requests
+    mailtxts = TextOfEmail.objects.filter(Q(sent_by__lte=datetime.now()) |
     mailtxts_list = list(mailtxts)
 
     wait = getattr(settings, 'EMAILTIMEOUT', None)
