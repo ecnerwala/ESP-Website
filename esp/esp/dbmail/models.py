@@ -286,7 +286,7 @@ class MessageRequest(models.Model):
                 'This might be a website bug. Please contact us at %s ' + \
                 'and tell us how you got this error, and we will look into it. ' + \
                 'The error message is: "%s".' % \
-                (sendto_fn_name, settings.DEFAULT_EMAIL_ADDRESSES['support'], e))
+                (sendto_fn_name, DEFAULT_EMAIL_ADDRESSES['support'], e))
 
     # Processing a MessageRequest needs to be atomic, so that if the DB falls
     # over halfway through the processing, we don't end up with half of the
@@ -296,8 +296,8 @@ class MessageRequest(models.Model):
     # I think we'll be okay, since nothing should block on it except other
     # instances of the same function (which should probably be locked out
     # anyway at a higher level).
-    @transaction.atomic
-    def process(self):
+    @transaction.commit_on_success
+    def process(self, debug=False):
         """Process this request, creating TextOfEmail and EmailRequest objects.
 
         It is the caller's responsibility to call this only on unprocessed
@@ -358,6 +358,9 @@ class MessageRequest(models.Model):
         # assembly is in a transaction.
         self.processed = True
         self.save()
+
+        if debug: print 'Prepared e-mails to send for message request %d: %s' % (self.id, self.subject)
+
 
         logger.info('Prepared e-mails to send for message request %d: %s', self.id, self.subject)
 
