@@ -53,27 +53,36 @@ _ONE_WEEK = timedelta(weeks=1)
 
     #   Process message requests
     for message in messages:
-        # If we raise an error here, transaction management will make sure that
-        # things with the MessageRequest get backed out properly.  We let the
-        # whole script just exit in this case -- this way we get an error
-        # message via cron, and the next run of the script can just try again.
-        message.process()
-    return messages
+        try:
+            message.process(True, debug=debug)
+        except:
+            message.processed_by = None
+            message.save()
+        else:
+            message.processed = True
+            message.save()
+    return list(messages)
 
-# Deliberately uses transaction autocommitting -- we don't need this to be
-# atomic.
-def send_email_requests():
-    """Go through all email requests that aren't sent and send them."""
+@transaction.autocommit
+def send_email_requests(debug=False):
+    """Go through all email requests that aren't sent and send them.
+    Callers (e.g. dbmail_cron.py) should ensure that this function is not
+    called in more than one thread simultaneously."""
+
     if hasattr(settings, 'EMAILRETRIES') and settings.EMAILRETRIES is not None:
         retries = settings.EMAILRETRIES
     else:
         retries = 2 # default 3 tries total
 
-    #   Find unsent e-mail requests
+    # Choose a set of emails to process.  Anything which arrives later will
+    # not be processed by this run of the script.
     mailtxts = TextOfEmail.objects.filter(Q(sent_by__lte=datetime.now()) |
+                                          Q(sent_by__isnull=True),
+                                          sent__isnull=True,
+                                          tries__lte=retries)
     mailtxts_list = list(mailtxts)
 
-    wait = getattr(settings, 'EMAILTIMEOUT', None)
+    wait = getattr(settings, 'EMAILTIMEOUT')
     if wait is None:
         wait = 1.5
 
@@ -81,18 +90,17 @@ def send_email_requests():
     errors = [] # if any messages failed to deliver
 
     for mailtxt in mailtxts_list:
-        exception = mailtxt.send()
+        exception = mailtxt.send(debug=debug)
         if exception is not None:
             errors.append({'email': mailtxt, 'exception': str(exception)})
-            logger.warning("Encountered error while sending to %s: %s",
-                           mailtxt.send_to, exception)
+            if debug: print "Encountered error while sending to " + str(mailtxt.send_to) + ": " + str(e)
         else:
             num_sent += 1
 
         time.sleep(wait)
 
-    if num_sent > 0:
-        logger.info('Sent %d messages', num_sent)
+    if debug and num_sent > 0:
+        print 'Sent %d messages' % num_sent
 
     #   Report any errors
     if errors:

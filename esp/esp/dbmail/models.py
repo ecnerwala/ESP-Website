@@ -384,7 +384,7 @@ class TextOfEmail(models.Model):
     def __unicode__(self):
         return unicode(self.subject) + ' <' + (self.send_to) + '>'
 
-    def send(self):
+    def send(self, debug=False):
         """Take the email data in this TextOfEmail and send it.
 
         Returns an exception, if one was raised by `send_mail`, or None if the
@@ -402,7 +402,6 @@ class TextOfEmail(models.Model):
             extra_headers = parent_request.special_headers_dict
         else:
             extra_headers = {}
-
         now = datetime.now()
 
         try:
@@ -411,7 +410,8 @@ class TextOfEmail(models.Model):
                       self.send_from,
                       self.send_to,
                       False,
-                      extra_headers=extra_headers)
+                      extra_headers=extra_headers,
+                      debug=debug)
         except Exception as e:
             self.tries += 1
             self.save()
@@ -419,7 +419,6 @@ class TextOfEmail(models.Model):
         else:
             self.sent = now
             self.save()
-
     @classmethod
     def expireUnsentEmails(cls, min_tries=0, orm_class=None):
         """
