@@ -935,32 +935,18 @@ Volunteer schedule for %s:
         for t in times_compulsory:
             t.friendly_times = [t.pretty_time()]
             t.initial_rooms = []
-
-        show_empty_blocks = Tag.getBooleanTag('studentschedule_show_empty_blocks', prog)
+        # TODO: conditional should use Tag.getBooleanTag or somesuch
+        studentschedule_show_empty_blocks = Tag.getTag('studentschedule_show_empty_blocks', target=prog)
         timeslots = list(prog.getTimeSlots())
         for student in students:
             student.updateOnsite(request)
             # get list of valid classes
             classes = classes_by_student[student.id]
 
-            #get the student's last class on each day
-            last_classes = []
-            days = {}
-            for cls in classes:
-                date = cls.end_time_prefetchable().date().isocalendar()
-                if date in days:
-                    days[date].append(cls)
-                else:
-                    days[date]=[cls]
-
-            for day,day_classes in days.items():
-                last_classes.append(day_classes[-1])
-            last_classes.sort()
-
-            if show_empty_blocks:
+            if studentschedule_show_empty_blocks:
                 #   If you want to show empty blocks, start with a list of blocks instead
                 #   and replace with classes where appropriate.
-                times = timeslots[:]
+                times = list(timeslots)
                 for cls in classes:
                     index = 0
                     for t in cls.meeting_times.all():
@@ -990,15 +976,15 @@ Volunteer schedule for %s:
             student.meals = iac.get_transfers(optional_only=True)  # catch everything that's not admission to the program.
             student.admission = iac.get_transfers(required_only=True)  # Program admission
             student.paid_online = iac.has_paid()
-            student.amount_finaid = iac.amount_finaid()
             student.amount_siblingdiscount = iac.amount_siblingdiscount()
+            amt_request = iac.amount_requested()
+            student.amount_finaid = iac.amount_finaid(amt_request, student.amount_siblingdiscount)
             student.itemizedcosttotal = iac.amount_due()
             student.splashinfo = SplashInfo.getForUser(student, prog)
 
             student.has_paid = ( student.itemizedcosttotal == 0 )
             student.payment_info = True
             student.classes = classes
-            student.last_classes = last_classes
 
         context['students'] = students
         context['program'] = prog
