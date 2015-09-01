@@ -36,7 +36,7 @@ Learning Unlimited, Inc.
 
 import os.path
 import os
-import subprocess
+from subprocess import check_call, STDOUT
 from random import random
 from functools import partial
 import hashlib
@@ -71,7 +71,7 @@ def render_to_latex(filepath, context_dict=None, filetype='pdf'):
 
     return gen_latex(rendered_source, filetype)
 
-def gen_latex(texcode, type='pdf', remove_files=False, stdout=_devnull_sentinel, stderr=subprocess.STDOUT):
+def gen_latex(texcode, type='pdf', remove_files=False, stdout=_devnull_sentinel, stderr=STDOUT):
     """Generate the latex code.
 
     :param texcode:
@@ -121,7 +121,7 @@ def _gen_latex(texcode, stdout, stderr, type='pdf', remove_files=False):
     file_base = os.path.join(TEX_TEMP, get_rand_file_base())
 
     if type == 'tex':
-        return HttpResponse(texcode, content_type='text/plain')
+        return HttpResponse(texcode, mimetype='text/plain')
 
     # write to the LaTeX file
     with open(file_base+TEX_EXT, 'w') as texfile:
