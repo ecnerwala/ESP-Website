@@ -44,7 +44,7 @@ from django.http import HttpResponseRedirect, HttpResponse, HttpResponseBadReque
 from esp.cal.models import Event
 from esp.middleware.threadlocalrequest import get_current_request
 from esp.program.models import ClassCategories, ClassSection, ClassSubject, RegistrationType, StudentRegistration, StudentSubjectInterest
-from esp.program.modules.base import ProgramModuleObj, main_call, aux_call, meets_deadline, needs_student, meets_grade
+from esp.program.modules.base import ProgramModuleObj, main_call, aux_call, meets_deadline, needs_student, meets_grade, meets_cap
 from esp.users.models import Record, ESPUser
 from esp.utils.web import render_to_response
 from esp.utils.query_utils import nest_Q
@@ -85,6 +85,7 @@ class StudentRegTwoPhase(ProgramModuleObj):
     @needs_student
     @meets_grade
     @meets_deadline('/Classes/Lottery')
+    @meets_cap
     def studentreg2phase(self, request, tl, one, two, module, extra, prog):
         """
         Serves the two-phase student reg page. This page includes instructions
@@ -212,6 +213,7 @@ class StudentRegTwoPhase(ProgramModuleObj):
     @needs_student
     @meets_grade
     @meets_deadline('/Classes/Lottery')
+    @meets_cap
     def mark_classes(self, request, tl, one, two, module, extra, prog):
         """
         Displays a filterable catalog which allows starring classes that the
@@ -248,6 +250,7 @@ class StudentRegTwoPhase(ProgramModuleObj):
     @needs_student
     @meets_grade
     @meets_deadline('/Classes/Lottery')
+    @meets_cap
     def mark_classes_interested(self, request, tl, one, two, module, extra, prog):
         """
         Saves the set of classes marked as interested by the student.
@@ -305,6 +308,7 @@ class StudentRegTwoPhase(ProgramModuleObj):
     @needs_student
     @meets_grade
     @meets_deadline('/Classes/Lottery')
+    @meets_cap
     def rank_classes(self, request, tl, one, two, module, extra, prog):
         """
         Displays a filterable catalog including only class subjects for which
@@ -337,6 +341,7 @@ class StudentRegTwoPhase(ProgramModuleObj):
     @needs_student
     @meets_grade
     @meets_deadline('/Classes/Lottery')
+    @meets_cap
     def save_priorities(self, request, tl, one, two, module, extra, prog):
         """
         Saves the priority preferences for student registration phase 2.
