@@ -33,8 +33,8 @@ Learning Unlimited, Inc.
   Email: web-team@learningu.org
 """
 
-from esp.program.modules.base import ProgramModuleObj, needs_teacher, needs_student, needs_admin, usercheck_usetl, meets_deadline, main_call, aux_call, meets_cap
-from esp.utils.web import render_to_response
+from esp.program.modules.base import ProgramModuleObj, needs_teacher, needs_student, needs_admin, usercheck_usetl, meets_deadline, main_call, aux_call
+from esp.web.util import render_to_response
 from esp.dbmail.models import send_mail
 from esp.users.models import ESPUser
 from esp.tagdict.models import Tag
@@ -130,7 +130,6 @@ class CreditCardModule_Stripe(ProgramModuleObj):
     @main_call
     @needs_student
     @meets_deadline('/Payment')
-    @meets_cap
     def payonline(self, request, tl, one, two, module, extra, prog):
 
         #   Check that the user has completed all required modules so that they
