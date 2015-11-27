@@ -41,7 +41,7 @@ from django.template import loader
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 
-from argcache import cache_function
+from esp.cache import cache_function
 
 try:
     import cPickle as pickle
@@ -290,6 +290,7 @@ class Question(models.Model):
             return None
 
         try:
+            average_key = 'question_%d_avg' % self.id
             ans = Answer.objects.filter(question=self)
             ans_count = ans.count()
             ans_sum = 0.0
@@ -303,7 +304,6 @@ class Question(models.Model):
         except:
             return 'N/A'
     global_average.depend_on_row('survey.Answer', lambda ans: {'self': ans.question})
-
     class Meta:
         ordering = ['seq']
 
