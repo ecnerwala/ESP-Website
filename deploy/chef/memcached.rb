@@ -1,6 +1,8 @@
 #!/usr/bin/env chef-apply
-
+#
 # Installs and configures memcached.
+
+require_relative 'common'
 
 package 'memcached'
 
@@ -9,6 +11,7 @@ service 'memcached' do
 end
 
 template '/etc/memcached.conf' do
-  source 'memcached.conf'
+  source "#{TEMPLATES}/memcached.conf"
+  local true
   notifies :restart, 'service[memcached]', :immediately
 end

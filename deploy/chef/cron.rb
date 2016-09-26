@@ -1,6 +1,8 @@
 #!/usr/bin/env chef-apply
-
+#
 # Install cron scripts for the website.
+
+require_relative 'common'
 
 template '/etc/conf.d/esp-dbmail' do
   source 'dbmail.cron'

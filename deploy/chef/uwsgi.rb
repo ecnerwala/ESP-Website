@@ -1,6 +1,8 @@
 #!/usr/bin/env chef-apply
-
+#
 # Installs uWSGI and configures it to serve the website.
+
+require_relative 'common'
 
 package 'uwsgi'
 package 'uwsgi-plugin-python'
@@ -10,7 +12,9 @@ service 'uwsgi' do
 end
 
 template '/etc/uwsgi/apps-available/esp.ini' do
-  source 'esp.ini'
+  source "#{TEMPLATES}/uwsgi.ini"
+  local true
+
   owner 'root'
   group 'root'
   mode '0644'
