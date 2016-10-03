@@ -21,6 +21,14 @@ CONFIG = INI['config']
 DISPLAY = INI['display']
 SECRET = INI['secret']
 
+def unix_hostname
+  CONFIG.fetch('slug')
+end
+
+def unix_fqdn
+  "#{unix_hostname}.learningu.org"
+end
+
 def http_hostname
-  CONFIG.fetch('domain-override') || "#{CONFIG.fetch('slug')}.learningu.org"
+  CONFIG.fetch('domain-override') || "#{unix_hostname}.learningu.org"
 end
