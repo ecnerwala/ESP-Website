@@ -894,6 +894,27 @@ teachers[key].filter(is_active = True).distinct().count()))
         data = {'amount_donation': amount_donation, 'amount_due': iac.amount_due()}
         return HttpResponse(json.dumps(data), content_type='application/json')
 
+    @aux_call
+    @json_response()
+    @needs_admin
+    def actually_teachers(self, request, tl, one, two, module, extra, prog):
+        # TODO FIXME: for some reason, the view "teachers" conflicts with something else
+        teachers = ESPUser.objects.filter(classsubject__parent_program=prog).distinct()
+        resources = UserAvailability.objects.filter(user__in=teachers).filter(event__program = prog).values('user_id', 'event_id')
+        resources_for_user = defaultdict(list)
+
+        for resource in resources:
+            resources_for_user[resource['user_id']].append(resource['event_id'])
+        
+        teacher_dicts = [
+            {   'uid': t.id,
+                'text': t.name(),
+                'availability': resources_for_user[t.id]
+            } for t in teachers ]
+
+        return {'teachers': teacher_dicts}
+    # TODO: cache
+
     class Meta:
         proxy = True
         app_label = 'modules'
