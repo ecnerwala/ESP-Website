@@ -905,7 +905,7 @@ teachers[key].filter(is_active = True).distinct().count()))
 
         for resource in resources:
             resources_for_user[resource['user_id']].append(resource['event_id'])
-        
+
         teacher_dicts = [
             {   'uid': t.id,
                 'text': t.name(),
