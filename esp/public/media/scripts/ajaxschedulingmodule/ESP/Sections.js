@@ -142,8 +142,12 @@ function Sections(sections_data, section_details_data, teacher_data, scheduleAss
     this.filtered_sections = function(allowScheduled){
         var returned_sections = [];
         $j.each(this.sections_data, function(section_id, section) {
-            // filter out scheduled sections
+            if (!this.scheduleAssignments[section.id]) {
+                // filter out rejected sections
+                return;
+            }
             if (this.isScheduled(section) && !allowScheduled) {
+                // filter out scheduled sections
                 return;
             }
             var sectionValid;
